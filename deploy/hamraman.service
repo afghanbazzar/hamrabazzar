@@ -1,0 +1,20 @@
+[Unit]
+Description=Hamraman Node Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/hamraman
+Environment=NODE_ENV=production
+# If you use a .env file, source it in ExecStartPre or set required env vars here
+# EnvironmentFile=/var/www/hamraman/.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=hamraman
+
+[Install]
+WantedBy=multi-user.target

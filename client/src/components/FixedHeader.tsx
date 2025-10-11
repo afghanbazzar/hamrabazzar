@@ -19,6 +19,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
+const runtimeLogo = '/uploads/logo.png';
 
 interface FixedHeaderProps {
   showBackButton?: boolean;
@@ -57,9 +59,14 @@ export default function FixedHeader({ showBackButton = false }: FixedHeaderProps
             </Link>
           )}
           <Link href="/">
-            <h1 className="text-lg md:text-xl font-bold text-primary cursor-pointer hover-elevate px-2 py-1 rounded-md" data-testid="text-app-name">
-              {t('appName')}
-            </h1>
+            {/* Try runtime PNG first; if it fails (404) fall back to bundled SVG */}
+            <img
+              src={runtimeLogo}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              alt={t('appName')}
+              className="h-8 md:h-10 cursor-pointer"
+              data-testid="img-app-logo"
+            />
           </Link>
         </div>
 

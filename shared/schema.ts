@@ -74,6 +74,9 @@ export const categories = [
   { id: "services", nameFA: "خدمات", namePS: "خدمات", nameEN: "Services", icon: "🛠️" },
   { id: "games", nameFA: "سرگرمی", namePS: "تفریح", nameEN: "Entertainment", icon: "🎮" },
   { id: "sports", nameFA: "ورزشی", namePS: "ورزش", nameEN: "Sports", icon: "⚽" },
+  { id: "produce", nameFA: "میوه‌جات و سبزیجات", namePS: "میوې او سبزيانې", nameEN: "Produce", icon: "🥬" },
+  { id: "grains", nameFA: "حبوبات و غله‌جات", namePS: "حبوبات او غلې", nameEN: "Grains & Pulses", icon: "🌾" },
+  
 ] as const;
 
 export const cities = [
