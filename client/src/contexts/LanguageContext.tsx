@@ -17,7 +17,7 @@ const translations = {
     register: 'ثبت‌نام',
     logout: 'خروج',
     search: 'جستجو',
-    searchPlaceholder: 'چی می‌گردی؟',
+  searchPlaceholder: 'پشت چی میگردی',
     allCategories: 'همه دسته‌بندی‌ها',
     afghanCities: 'شهرهای افغانستان',
     recentListings: 'آخرین آگهی‌های منتشر شده',

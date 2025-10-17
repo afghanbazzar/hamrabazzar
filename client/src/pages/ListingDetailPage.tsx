@@ -5,16 +5,19 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { categories, cities, type Listing, type User } from '@shared/schema';
-import { Phone, MapPin, Clock, User as UserIcon, LogIn } from 'lucide-react';
+import { Phone, MapPin, Clock, User as UserIcon, LogIn, Share2, MessageCircle, Send, Copy } from 'lucide-react';
 
 export default function ListingDetailPage() {
   const [, params] = useRoute('/listing/:id');
   const [, navigate] = useLocation();
   const { t, language } = useLanguage();
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
   const listingId = params?.id;
 
   const { data: listing, isLoading } = useQuery<Listing>({
@@ -128,6 +131,92 @@ export default function ListingDetailPage() {
     );
   }
 
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/listing/${listing.id}` : '';
+  const shareText = language === 'fa' ? `مشاهده آگهی ${listing.title}` :
+                     language === 'ps' ? `${listing.title} اعلان وګورئ` :
+                     `Check out ${listing.title}`;
+  const shareLabel = language === 'fa' ? 'اشتراک گذاری' : language === 'ps' ? 'شریک کول' : 'Share';
+  const nativeShareLabel = language === 'fa' ? 'اشتراک مستقیم' : language === 'ps' ? 'مستقیم شریکول' : 'Share directly';
+  const whatsappLabel = language === 'fa' ? 'اشتراک در واتساپ' : language === 'ps' ? 'په واټساپ کې شریک کړئ' : 'Share on WhatsApp';
+  const telegramLabel = language === 'fa' ? 'اشتراک در تلگرام' : language === 'ps' ? 'په ټیلیګرام کې شریک کړئ' : 'Share on Telegram';
+  const copyLabel = language === 'fa' ? 'کپی لینک' : language === 'ps' ? 'لिंक کاپي کړئ' : 'Copy link';
+  const copySuccessMessage = language === 'fa' ? 'لینک در کلیپبورد کپی شد' :
+                              language === 'ps' ? 'لینک کلیپبورډ ته کاپي شو' :
+                              'Link copied to clipboard';
+  const copyErrorMessage = language === 'fa' ? 'کپی لینک انجام نشد' :
+                            language === 'ps' ? 'لینک کاپي نه شو' :
+                            'Unable to copy link';
+  const shareErrorMessage = language === 'fa' ? 'اشتراک گذاری انجام نشد' :
+                            language === 'ps' ? 'شریک کول ترسره نه شول' :
+                            'Unable to share';
+  const successTitle = language === 'fa' ? 'موفقیت' : language === 'ps' ? 'بریالیتوب' : 'Success';
+  const errorTitle = language === 'fa' ? 'خطا' : language === 'ps' ? 'تیروتنه' : 'Error';
+
+  const handleCopyLink = async () => {
+    if (!shareUrl) return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else if (typeof document !== 'undefined') {
+        const textarea = document.createElement('textarea');
+        textarea.value = shareUrl;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      toast({
+        title: successTitle,
+        description: copySuccessMessage,
+      });
+    } catch (error) {
+      toast({
+        title: errorTitle,
+        description: copyErrorMessage,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleShareToWhatsApp = () => {
+    if (!shareUrl || typeof window === 'undefined') return;
+    const message = `${shareText} ${shareUrl}`.trim();
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShareToTelegram = () => {
+    if (!shareUrl || typeof window === 'undefined') return;
+    const url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleNativeShare = async () => {
+    if (!shareUrl) return;
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: listing.title,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        if ((error as DOMException)?.name !== 'AbortError') {
+          toast({
+            title: errorTitle,
+            description: shareErrorMessage,
+            variant: 'destructive',
+          });
+        }
+      }
+    } else {
+      await handleCopyLink();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <FixedHeader showBackButton />
@@ -168,7 +257,35 @@ export default function ListingDetailPage() {
                         </div>
                       </div>
                     </div>
-                    <Badge variant="secondary">{getCategoryName()}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">{getCategoryName()}</Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Share2 className="w-4 h-4" />
+                            <span className="hidden sm:inline">{shareLabel}</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuItem onSelect={() => { void handleNativeShare(); }}>
+                            <Share2 className="w-4 h-4" />
+                            <span>{nativeShareLabel}</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => { void handleShareToWhatsApp(); }}>
+                            <MessageCircle className="w-4 h-4" />
+                            <span>{whatsappLabel}</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => { void handleShareToTelegram(); }}>
+                            <Send className="w-4 h-4" />
+                            <span>{telegramLabel}</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => { void handleCopyLink(); }}>
+                            <Copy className="w-4 h-4" />
+                            <span>{copyLabel}</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
